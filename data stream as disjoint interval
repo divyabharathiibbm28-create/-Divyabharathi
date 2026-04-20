@@ -1,0 +1,40 @@
+import bisect
+
+class SummaryRanges:
+    def __init__(self):
+        # self.intervals stores [start, end]
+        self.intervals = []
+
+    def addNum(self, value: int) -> None:
+        # Find where [value, value] would be inserted to maintain order
+        idx = bisect.bisect_left(self.intervals, [value, value])
+        
+        # 1. Check if 'value' is already contained in the previous interval
+        if idx > 0 and self.intervals[idx-1][0] <= value <= self.intervals[idx-1][1]:
+            return
+        
+        # 2. Check if 'value' is already the start of the current interval
+        if idx < len(self.intervals) and self.intervals[idx][0] <= value <= self.intervals[idx][1]:
+            return
+
+        # 3. Check for merging possibilities
+        # Does it connect the interval before it and the interval after it?
+        can_merge_left = idx > 0 and self.intervals[idx-1][1] + 1 == value
+        can_merge_right = idx < len(self.intervals) and self.intervals[idx][0] - 1 == value
+
+        if can_merge_left and can_merge_right:
+            # Merge left + value + right into one: [left.start, right.end]
+            self.intervals[idx-1][1] = self.intervals[idx][1]
+            self.intervals.pop(idx)
+        elif can_merge_left:
+            # Extend the left interval: [left.start, value]
+            self.intervals[idx-1][1] = value
+        elif can_merge_right:
+            # Extend the right interval: [value, right.end]
+            self.intervals[idx][0] = value
+        else:
+            # No connection, create a new disjoint interval
+            self.intervals.insert(idx, [value, value])
+
+    def getIntervals(self) -> List[List[int]]:
+        return self.intervals

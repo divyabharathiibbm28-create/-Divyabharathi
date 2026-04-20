@@ -1,0 +1,29 @@
+class Solution:
+    def numWays(self, words: List[str], target: str) -> int:
+        MOD = 10**9 + 7
+        word_len = len(words[0])
+        target_len = len(target)
+        
+        # 1. Pre-calculate frequency of each char at each column index
+        # char_counts[column_index][character]
+        char_counts = [[0] * 26 for _ in range(word_len)]
+        for w in words:
+            for i, char in enumerate(w):
+                char_counts[i][ord(char) - ord('a')] += 1
+        
+        # 2. dp[i] = number of ways to form target[:i]
+        dp = [0] * (target_len + 1)
+        dp[0] = 1
+        
+        # 3. Process each column of 'words'
+        for j in range(word_len):
+            # Iterate backwards through target to avoid using the same column 
+            # for multiple characters of the same target string
+            for i in range(target_len - 1, -1, -1):
+                char_idx = ord(target[i]) - ord('a')
+                count = char_counts[j][char_idx]
+                
+                if count > 0:
+                    dp[i+1] = (dp[i+1] + dp[i] * count) % MOD
+                    
+        return dp[target_len]

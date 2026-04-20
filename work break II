@@ -1,0 +1,28 @@
+from functools import cache
+
+class Solution:
+    def wordBreak(self, s: str, wordDict: List[str]) -> List[str]:
+        wordSet = set(wordDict)  # O(1) lookups
+        
+        @cache
+        def backtrack(start):
+            # Base case: if we reach the end of the string, 
+            # return a list containing an empty string to represent a valid path.
+            if start == len(s):
+                return [""]
+            
+            res = []
+            # Try every possible end index for the current word
+            for end in range(start + 1, len(s) + 1):
+                word = s[start:end]
+                if word in wordSet:
+                    # Recursively get all valid sentences for the remaining suffix
+                    suffixes = backtrack(end)
+                    for suffix in suffixes:
+                        if suffix == "":
+                            res.append(word)
+                        else:
+                            res.append(word + " " + suffix)
+            return res
+        
+        return backtrack(0)

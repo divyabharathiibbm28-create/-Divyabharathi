@@ -1,0 +1,26 @@
+import heapq
+
+class Solution:
+    def mergeKLists(self, lists: List[Optional[ListNode]]) -> Optional[ListNode]:
+        # Use a min-heap to keep track of the smallest current nodes
+        heap = []
+        
+        # Add the head of each non-empty list to the heap
+        # We include 'i' to handle cases where node values are identical
+        for i, l in enumerate(lists):
+            if l:
+                heapq.heappush(heap, (l.val, i, l))
+        
+        dummy = ListNode(0)
+        curr = dummy
+        
+        while heap:
+            val, i, node = heapq.heappop(heap)
+            curr.next = ListNode(val)
+            curr = curr.next
+            
+            # If there's a next node in the list we just pulled from, add it
+            if node.next:
+                heapq.heappush(heap, (node.next.val, i, node.next))
+                
+        return dummy.next

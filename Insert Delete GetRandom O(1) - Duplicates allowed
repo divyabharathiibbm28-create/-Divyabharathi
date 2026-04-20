@@ -1,0 +1,41 @@
+import random
+from collections import defaultdict
+
+class RandomizedCollection:
+    def __init__(self):
+        # List to store elements for O(1) random access
+        self.nums = []
+        # Maps value to a SET of its indices in self.nums
+        self.indices = defaultdict(set)
+
+    def insert(self, val: int) -> bool:
+        # Check if val is already present (requirement for the boolean return)
+        present = val in self.indices and len(self.indices[val]) > 0
+        
+        # Add index to the set and append value to the list
+        self.indices[val].add(len(self.nums))
+        self.nums.append(val)
+        return not present
+
+    def remove(self, val: int) -> bool:
+        if not self.indices[val]:
+            return False
+        
+        # 1. Get an index of the element to remove and the last element in the list
+        remove_idx = self.indices[val].pop()
+        last_val = self.nums[-1]
+        last_idx = len(self.nums) - 1
+        
+        # 2. Swap the element at remove_idx with the last element
+        self.nums[remove_idx] = last_val
+        self.indices[last_val].add(remove_idx)
+        # 3. Crucial: remove the old 'last_idx' from the last_val's index set
+        self.indices[last_val].remove(last_idx)
+        
+        # 4. Finalise removal from the list
+        self.nums.pop()
+        return True
+
+    def getRandom(self) -> int:
+        # Each instance in the list has an equal probability of being picked
+        return random.choice(self.nums)

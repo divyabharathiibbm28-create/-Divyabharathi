@@ -1,0 +1,23 @@
+from typing import List
+
+class Solution:
+    def canSeePersonsCount(self, heights: List[int]) -> List[int]:
+        n = len(heights)
+        ans = [0] * n
+        stack = []  # Monotonic decreasing stack to store heights
+
+        for i in range(n - 1, -1, -1):
+            current_height = heights[i]
+            
+            # Pop shorter people, who are visible to the current person
+            while stack and stack[-1] < current_height:
+                ans[i] += 1
+                stack.pop()
+            
+            # The next taller person (if any) is also visible
+            if stack:
+                ans[i] += 1
+            
+            stack.append(current_height)
+            
+        return ans

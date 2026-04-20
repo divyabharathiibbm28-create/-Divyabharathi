@@ -1,0 +1,50 @@
+from collections import deque
+
+class Solution:
+    def catMouseGame(self, graph: List[List[int]]) -> int:
+        n = len(graph)
+        # Result states: 0: DRAW, 1: MOUSE, 2: CAT
+        # color[m][c][turn]
+        color = [[[0] * 3 for _ in range(n)] for _ in range(n)]
+        # degree[m][c][turn] helps track if all moves lead to a loss
+        degree = [[[0] * 3 for _ in range(n)] for _ in range(n)]
+        
+        for m in range(n):
+            for c in range(n):
+                degree[m][c][1] = len(graph[m])
+                degree[m][c][2] = len([v for v in graph[c] if v != 0])
+
+        queue = deque()
+        # Terminal States: Mouse wins at hole (0)
+        for i in range(1, n):
+            for t in range(1, 3):
+                color[0][i][t] = 1
+                queue.append((0, i, t, 1))
+        # Terminal States: Cat catches Mouse
+        for i in range(1, n):
+            for t in range(1, 3):
+                if color[i][i][t] == 0:
+                    color[i][i][t] = 2
+                    queue.append((i, i, t, 2))
+
+        while queue:
+            m, c, t, res = queue.popleft()
+            # Find previous states that could lead here
+            prev_t = 3 - t
+            for prev_node in (graph[c] if prev_t == 2 else graph[m]):
+                pm, pc = (m, prev_node) if prev_t == 2 else (prev_node, c)
+                if prev_t == 2 and pc == 0: continue # Cat can't be at hole
+                
+                if color[pm][pc][prev_t] == 0:
+                    # If the move leads to a win for the player whose turn it was
+                    if res == prev_t:
+                        color[pm][pc][prev_t] = res
+                        queue.append((pm, pc, prev_t, res))
+                    else:
+                        # Otherwise, decrement degree; if no winning moves left, it's a loss
+                        degree[pm][pc][prev_t] -= 1
+                        if degree[pm][pc][prev_t] == 0:
+                            color[pm][pc][prev_t] = res
+                            queue.append((pm, pc, prev_t, res))
+                            
+        return color[1][2][1]

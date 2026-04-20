@@ -1,0 +1,51 @@
+from collections import defaultdict, OrderedDict
+
+class LFUCache:
+    def __init__(self, capacity: int):
+        self.cap = capacity
+        self.min_freq = 0
+        # key -> (value, frequency)
+        self.key_to_val_freq = {}
+        # frequency -> OrderedDict(key -> None) 
+        # (OrderedDict acts as a Doubly Linked List for O(1) removal)
+        self.freq_to_keys = defaultdict(OrderedDict)
+
+    def _update(self, key):
+        val, freq = self.key_to_val_freq[key]
+        # Remove from current frequency list
+        del self.freq_to_keys[freq][key]
+        
+        # If the current min_freq list is empty, increment min_freq
+        if not self.freq_to_keys[freq] and freq == self.min_freq:
+            self.min_freq += 1
+            
+        # Move to next frequency level
+        new_freq = freq + 1
+        self.key_to_val_freq[key] = (val, new_freq)
+        self.freq_to_keys[new_freq][key] = None
+
+    def get(self, key: int) -> int:
+        if key not in self.key_to_val_freq:
+            return -1
+        self._update(key)
+        return self.key_to_val_freq[key][0]
+
+    def put(self, key: int, value: int) -> None:
+        if self.cap == 0: return
+
+        if key in self.key_to_val_freq:
+            # Update value and frequency
+            _, freq = self.key_to_val_freq[key]
+            self.key_to_val_freq[key] = (value, freq)
+            self._update(key)
+        else:
+            if len(self.key_to_val_freq) >= self.cap:
+                # Evict the least frequently used (and least recently used among those)
+                # popitem(last=False) gets the LRU item from the min_freq list
+                pop_key, _ = self.freq_to_keys[self.min_freq].popitem(last=False)
+                del self.key_to_val_freq[pop_key]
+            
+            # Add new key with frequency 1
+            self.key_to_val_freq[key] = (value, 1)
+            self.freq_to_keys[1][key] = None
+            self.min_freq = 1
